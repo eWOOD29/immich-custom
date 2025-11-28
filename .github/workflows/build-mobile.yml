@@ -228,6 +228,7 @@ jobs:
         working-directory: ./mobile/ios
         run: |
           pod repo update --silent
+          pod update sqlite3 --silent
           pod install --repo-update
 
       - name: Install Fastlane
