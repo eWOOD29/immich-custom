@@ -15,7 +15,7 @@
     type UserResponseDto,
   } from '@immich/sdk';
   import { Icon, Modal, ModalBody, modalManager, toastManager } from '@immich/ui';
-  import { mdiArrowDownThin, mdiArrowUpThin, mdiDotsVertical, mdiPlus } from '@mdi/js';
+  import { mdiArrowDownThin, mdiArrowUpThin, mdiDotsVertical, mdiPlus, mdiShuffleVariant } from '@mdi/js';
   import { findKey } from 'lodash-es';
   import { t } from 'svelte-i18n';
   import SettingDropdown from '../components/shared-components/settings/setting-dropdown.svelte';
@@ -23,27 +23,48 @@
   interface Props {
     album: AlbumResponseDto;
     order: AssetOrder | undefined;
+    displayOrder?: AssetOrder | 'shuffle';
     user: UserResponseDto;
     onClose: (
-      result?: { action: 'changeOrder'; order: AssetOrder } | { action: 'shareUser' } | { action: 'refreshAlbum' },
+      result?:
+        | { action: 'changeOrder'; order: AssetOrder }
+        | { action: 'shareUser' }
+        | { action: 'refreshAlbum' }
+        | { action: 'shuffle' },
     ) => void;
   }
 
-  let { album, order, user, onClose }: Props = $props();
+  let { album, order, displayOrder = order, user, onClose }: Props = $props();
 
-  const options: Record<AssetOrder, RenderedOption> = {
+  const options: Record<AssetOrder | 'shuffle', RenderedOption> = {
     [AssetOrder.Asc]: { icon: mdiArrowUpThin, title: $t('oldest_first') },
     [AssetOrder.Desc]: { icon: mdiArrowDownThin, title: $t('newest_first') },
+    shuffle: { icon: mdiShuffleVariant, title: $t('shuffle') },
   };
 
-  let selectedOption = $derived(order ? options[order] : options[AssetOrder.Desc]);
+  let selectedOption = $state(displayOrder ? options[displayOrder] : options[AssetOrder.Desc]);
+
+  $effect(() => {
+    selectedOption = displayOrder ? options[displayOrder] : options[AssetOrder.Desc];
+  });
 
   const handleToggleOrder = async (returnedOption: RenderedOption): Promise<void> => {
-    if (selectedOption === returnedOption) {
+    const optionKey = findKey(options, (option) => option === returnedOption) as AssetOrder | 'shuffle';
+
+    if (optionKey !== 'shuffle' && selectedOption === returnedOption) {
       return;
     }
+
+    if (optionKey === 'shuffle') {
+      selectedOption = returnedOption;
+      onClose({ action: 'shuffle' });
+      return;
+    }
+
     let order: AssetOrder = AssetOrder.Desc;
-    order = findKey(options, (option) => option === returnedOption) as AssetOrder;
+    order = optionKey;
+
+    selectedOption = returnedOption;
 
     try {
       await updateAlbumInfo({
@@ -114,12 +135,12 @@
         <h2 class="uppercase text-gray text-sm mb-2">{$t('settings')}</h2>
         <div class="grid p-2 gap-y-2">
           {#if order}
-            <SettingDropdown
-              title={$t('display_order')}
-              options={Object.values(options)}
-              selectedOption={options[order]}
-              onToggle={handleToggleOrder}
-            />
+          <SettingDropdown
+            title={$t('display_order')}
+            options={Object.values(options)}
+            selectedOption={selectedOption}
+            onToggle={handleToggleOrder}
+          />
           {/if}
           <SettingSwitch
             title={$t('comments_and_likes')}

@@ -2,7 +2,7 @@ import { setDifference, type TimelineDate } from '$lib/utils/timeline-util';
 import { AssetOrder } from '@immich/sdk';
 import type { DayGroup } from './day-group.svelte';
 import type { MonthGroup } from './month-group.svelte';
-import type { TimelineAsset } from './types';
+import type { TimelineAsset, TimelineDisplayOrder } from './types';
 
 export class GroupInsertionCache {
   #lookupCache: {
@@ -50,7 +50,7 @@ export class GroupInsertionCache {
     return updated;
   }
 
-  sort(monthGroup: MonthGroup, sortOrder: AssetOrder = AssetOrder.Desc) {
+  sort(monthGroup: MonthGroup, sortOrder: TimelineDisplayOrder = AssetOrder.Desc) {
     for (const group of this.changedDayGroups) {
       group.sortAssets(sortOrder);
     }

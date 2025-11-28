@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:immich_mobile/constants/enums.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/providers/activity_statistics.provider.dart';
 import 'package:immich_mobile/providers/album/album.provider.dart';
@@ -139,8 +140,8 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
       // }
     }
 
-    void onSortOrderToggled() async {
-      final updatedAlbum = await ref.read(albumProvider.notifier).toggleSortOrder(album);
+    Future<void> onSortOrderSelected(SortOrder order) async {
+      final updatedAlbum = await ref.read(albumProvider.notifier).setSortOrder(album, order);
 
       if (updatedAlbum == null) {
         ImmichToast.show(
@@ -149,9 +150,55 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
           toastType: ToastType.error,
           gravity: ToastGravity.BOTTOM,
         );
+        return;
       }
 
+      albumState.value = updatedAlbum;
       context.pop();
+    }
+
+    void onSortOrderPressed() {
+      showModalBottomSheet(
+        backgroundColor: context.scaffoldBackgroundColor,
+        isScrollControlled: false,
+        context: context,
+        builder: (context) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 12.0, bottom: 24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.arrow_downward_rounded),
+                    title: const Text('newest_first').tr(),
+                    trailing: album.sortOrder == SortOrder.desc
+                        ? const Icon(Icons.check_rounded)
+                        : const SizedBox.shrink(),
+                    onTap: () => onSortOrderSelected(SortOrder.desc),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.arrow_upward_rounded),
+                    title: const Text('oldest_first').tr(),
+                    trailing: album.sortOrder == SortOrder.asc
+                        ? const Icon(Icons.check_rounded)
+                        : const SizedBox.shrink(),
+                    onTap: () => onSortOrderSelected(SortOrder.asc),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.shuffle_rounded),
+                    title: const Text('shuffle').tr(),
+                    trailing: album.sortOrder == SortOrder.shuffle
+                        ? const Icon(Icons.check_rounded)
+                        : const SizedBox.shrink(),
+                    onTap: () => onSortOrderSelected(SortOrder.shuffle),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
     }
 
     void buildBottomSheet() {
@@ -169,7 +216,10 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
         ),
         ListTile(
           leading: const Icon(Icons.swap_vert_rounded),
-          onTap: onSortOrderToggled,
+          onTap: () {
+            context.pop();
+            onSortOrderPressed();
+          },
           title: const Text("change_display_order", style: TextStyle(fontWeight: FontWeight.w500)).tr(),
         ),
         ListTile(

@@ -199,14 +199,14 @@ export class MonthGroup {
     }
 
     for (const group of addContext.existingDayGroups) {
-      group.sortAssets(this.#sortOrder);
+      group.sortAssets(this.timelineManager.getDisplayOrder());
     }
 
     if (addContext.newDayGroups.size > 0) {
       this.sortDayGroups();
     }
 
-    addContext.sort(this, this.#sortOrder);
+    addContext.sort(this, this.timelineManager.getDisplayOrder());
 
     return addContext.unprocessedAssets;
   }

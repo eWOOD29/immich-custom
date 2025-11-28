@@ -5,9 +5,13 @@ export type ViewportTopMonth = TimelineYearMonth | undefined | 'lead-in' | 'lead
 
 export type AssetApiGetTimeBucketsRequest = Parameters<typeof import('@immich/sdk').getTimeBuckets>[0];
 
+export type TimelineDisplayOrder = AssetOrder | 'shuffle';
+
 export type TimelineManagerOptions = Omit<AssetApiGetTimeBucketsRequest, 'size'> & {
   timelineAlbumId?: string;
   deferInit?: boolean;
+  displayOrder?: TimelineDisplayOrder;
+  shuffleToken?: string;
 };
 
 export type AssetDescriptor = { id: string };

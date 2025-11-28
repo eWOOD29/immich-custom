@@ -54,9 +54,15 @@ class TimelineRepository extends DatabaseRepository {
     final withSortedOption = switch (album.sortOrder) {
       SortOrder.asc => query.sortByFileCreatedAt(),
       SortOrder.desc => query.sortByFileCreatedAtDesc(),
+      SortOrder.shuffle => query.sortByFileCreatedAtDesc(),
     };
 
-    return _watchRenderList(withSortedOption, groupAssetByOption);
+    return _watchRenderList(
+      withSortedOption,
+      groupAssetByOption,
+      shuffle: album.sortOrder == SortOrder.shuffle,
+      sortOrder: album.sortOrder,
+    );
   }
 
   Stream<RenderList> watchTrashTimeline(String userId) {
@@ -136,11 +142,38 @@ class TimelineRepository extends DatabaseRepository {
 
   Stream<RenderList> _watchRenderList(
     QueryBuilder<Asset, Asset, QAfterSortBy> query,
-    GroupAssetsBy groupAssetsBy,
-  ) async* {
-    yield await RenderList.fromQuery(query, groupAssetsBy);
+    GroupAssetsBy groupAssetsBy, {
+    bool shuffle = false,
+    SortOrder sortOrder = SortOrder.desc,
+  }) async* {
+    Future<RenderList> buildRenderList() async {
+      if (!shuffle) {
+        return RenderList.fromQuery(query, groupAssetsBy);
+      }
+
+      final assets = await query.findAll();
+      final groupedAssets = <DateTime, List<Asset>>{};
+
+      for (final asset in assets) {
+        final createdAt = DateTime(asset.fileCreatedAt.year, asset.fileCreatedAt.month, asset.fileCreatedAt.day);
+        groupedAssets.putIfAbsent(createdAt, () => []).add(asset);
+      }
+
+      final sortedDays = groupedAssets.keys.toList()
+        ..sort((a, b) => sortOrder == SortOrder.asc ? a.compareTo(b) : b.compareTo(a));
+
+      final shuffledAssets = <Asset>[];
+      for (final day in sortedDays) {
+        groupedAssets[day]!.shuffle();
+        shuffledAssets.addAll(groupedAssets[day]!);
+      }
+
+      return RenderList.fromAssets(shuffledAssets, groupAssetsBy);
+    }
+
+    yield await buildRenderList();
     await for (final _ in query.watchLazy()) {
-      yield await RenderList.fromQuery(query, groupAssetsBy);
+      yield await buildRenderList();
     }
   }
 }

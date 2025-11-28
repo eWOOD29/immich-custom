@@ -207,9 +207,10 @@ export class TimelineManager extends VirtualScrollManager {
   }
 
   async #initializeMonthGroups() {
+    const { displayOrder: _displayOrder, shuffleToken: _shuffleToken, ...apiOptions } = this.#options;
     const timebuckets = await getTimeBuckets({
       ...authManager.params,
-      ...this.#options,
+      ...apiOptions,
     });
 
     this.months = timebuckets.map((timeBucket) => {
@@ -229,13 +230,26 @@ export class TimelineManager extends VirtualScrollManager {
     if (options.deferInit) {
       return;
     }
-    if (this.#options !== TimelineManager.#INIT_OPTIONS && isEqual(this.#options, options)) {
+    const { displayOrder, shuffleToken, ...nextOptions } = options;
+    const { displayOrder: prevDisplayOrder, shuffleToken: prevShuffleToken, ...prevOptions } = this.#options;
+
+    const hasDisplayOrderChange = displayOrder !== prevDisplayOrder || shuffleToken !== prevShuffleToken;
+    const hasOptionChange =
+      this.#options === TimelineManager.#INIT_OPTIONS ? true : !isEqual(prevOptions, nextOptions);
+
+    this.#options = options;
+
+    if (hasOptionChange) {
+      await this.initTask.reset();
+      await this.#init(options);
+      this.updateViewportGeometry(false);
+      this.#createScrubberMonths();
       return;
     }
-    await this.initTask.reset();
-    await this.#init(options);
-    this.updateViewportGeometry(false);
-    this.#createScrubberMonths();
+
+    if (hasDisplayOrderChange) {
+      this.#applyDisplayOrder();
+    }
   }
 
   async #init(options: TimelineManagerOptions) {
@@ -323,7 +337,10 @@ export class TimelineManager extends VirtualScrollManager {
   upsertAssets(assets: TimelineAsset[]) {
     const notUpdated = this.#updateAssets(assets);
     const notExcluded = notUpdated.filter((asset) => !this.isExcluded(asset));
-    addAssetsToMonthGroups(this, [...notExcluded], { order: this.#options.order ?? AssetOrder.Desc });
+    addAssetsToMonthGroups(this, [...notExcluded], {
+      order: this.#options.order ?? AssetOrder.Desc,
+      displayOrder: this.getDisplayOrder(),
+    });
   }
 
   async findMonthGroupForAsset(id: string) {
@@ -401,7 +418,10 @@ export class TimelineManager extends VirtualScrollManager {
   }
 
   updateAssetOperation(ids: string[], operation: AssetOperation) {
-    runAssetOperation(this, new SvelteSet(ids), operation, { order: this.#options.order ?? AssetOrder.Desc });
+    runAssetOperation(this, new SvelteSet(ids), operation, {
+      order: this.#options.order ?? AssetOrder.Desc,
+      displayOrder: this.getDisplayOrder(),
+    });
   }
 
   #updateAssets(assets: TimelineAsset[]) {
@@ -413,7 +433,7 @@ export class TimelineManager extends VirtualScrollManager {
         updateObject(asset, lookup.get(asset.id));
         return { remove: false };
       },
-      { order: this.#options.order ?? AssetOrder.Desc },
+      { order: this.#options.order ?? AssetOrder.Desc, displayOrder: this.getDisplayOrder() },
     );
     const result: TimelineAsset[] = [];
     for (const id of unprocessedIds.values()) {
@@ -429,7 +449,7 @@ export class TimelineManager extends VirtualScrollManager {
       () => {
         return { remove: true };
       },
-      { order: this.#options.order ?? AssetOrder.Desc },
+      { order: this.#options.order ?? AssetOrder.Desc, displayOrder: this.getDisplayOrder() },
     );
     return [...unprocessedIds];
   }
@@ -492,5 +512,19 @@ export class TimelineManager extends VirtualScrollManager {
 
   getAssetOrder() {
     return this.#options.order ?? AssetOrder.Desc;
+  }
+
+  getDisplayOrder() {
+    return this.#options.displayOrder ?? this.getAssetOrder();
+  }
+
+  #applyDisplayOrder() {
+    for (const month of this.months) {
+      for (const group of month.dayGroups) {
+        group.sortAssets(this.getDisplayOrder());
+      }
+      updateGeometry(this, month, { invalidateHeight: true });
+    }
+    this.updateIntersections();
   }
 }

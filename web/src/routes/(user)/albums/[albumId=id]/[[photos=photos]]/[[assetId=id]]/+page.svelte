@@ -100,6 +100,8 @@
   let isCreatingSharedAlbum = $state(false);
   let isShowActivity = $state(false);
   let albumOrder: AssetOrder | undefined = $state(data.album.order);
+  let albumDisplayOrder: AssetOrder | 'shuffle' | undefined = $state(data.album.order);
+  let shuffleToken = $state('');
 
   const assetInteraction = new AssetInteraction();
   const timelineInteraction = new AssetInteraction();
@@ -305,7 +307,7 @@
         timelineAlbumId: albumId,
       };
     }
-    return { albumId, order: albumOrder };
+    return { albumId, order: albumOrder, displayOrder: albumDisplayOrder, shuffleToken };
   });
 
   const isShared = $derived(viewMode === AlbumPageViewMode.SELECT_ASSETS ? false : album.albumUsers.length > 0);
@@ -387,7 +389,12 @@
   };
 
   const handleOptions = async () => {
-    const result = await modalManager.show(AlbumOptionsModal, { album, order: albumOrder, user: $user });
+    const result = await modalManager.show(AlbumOptionsModal, {
+      album,
+      order: albumOrder,
+      displayOrder: albumDisplayOrder,
+      user: $user,
+    });
 
     if (!result) {
       return;
@@ -396,6 +403,12 @@
     switch (result.action) {
       case 'changeOrder': {
         albumOrder = result.order;
+        albumDisplayOrder = result.order;
+        break;
+      }
+      case 'shuffle': {
+        albumDisplayOrder = 'shuffle';
+        shuffleToken = Math.random().toString(36).slice(2);
         break;
       }
       case 'shareUser': {
@@ -408,6 +421,13 @@
       }
     }
   };
+
+  $effect(() => {
+    albumOrder = album.order;
+    if (albumDisplayOrder !== 'shuffle') {
+      albumDisplayOrder = album.order;
+    }
+  });
 </script>
 
 <OnEvents {onSharedLinkCreate} {onAlbumDelete} />

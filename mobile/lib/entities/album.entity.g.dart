@@ -247,8 +247,8 @@ P _albumDeserializeProp<P>(
   }
 }
 
-const _AlbumsortOrderEnumValueMap = {'asc': 0, 'desc': 1};
-const _AlbumsortOrderValueEnumMap = {0: SortOrder.asc, 1: SortOrder.desc};
+const _AlbumsortOrderEnumValueMap = {'asc': 0, 'desc': 1, 'shuffle': 2};
+const _AlbumsortOrderValueEnumMap = {0: SortOrder.asc, 1: SortOrder.desc, 2: SortOrder.shuffle};
 
 Id _albumGetId(Album object) {
   return object.id;
