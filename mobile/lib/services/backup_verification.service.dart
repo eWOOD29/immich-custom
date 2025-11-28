@@ -143,10 +143,11 @@ class BackupVerificationService {
     if (exif != null && file != null && exif.fileSize != null) {
       final origSize = await file.length();
       if (exif.fileSize! == origSize || exif.fileSize! != origSize) {
-        final latLng = await local.local!.latlngAsync();
+        // Ensure local geolocation metadata is loaded so that subsequent
+        // comparisons that rely on it are accurate.
+        await local.local!.latlngAsync();
 
         if (exif.latitude == null &&
-            latLng.latitude != null &&
             (remote.fileCreatedAt.isAtSameMomentAs(local.fileCreatedAt) ||
                 remote.fileModifiedAt.isAtSameMomentAs(local.fileModifiedAt) ||
                 _sameExceptTimeZone(remote.fileCreatedAt, local.fileCreatedAt))) {
