@@ -1,4 +1,4 @@
-enum SortOrder { asc, desc }
+enum SortOrder { asc, desc, shuffle }
 
 enum TextSearchType { context, filename, description, ocr }
 

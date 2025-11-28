@@ -408,6 +408,11 @@ class AlbumService {
   }
 
   Future<Album?> updateSortOrder(Album album, SortOrder order) async {
+    if (order == SortOrder.shuffle) {
+      album.sortOrder = order;
+      return _albumRepository.update(album);
+    }
+
     try {
       final updateAlbum = await _albumApiRepository.update(album.remoteId!, sortOrder: order);
       album.sortOrder = updateAlbum.sortOrder;

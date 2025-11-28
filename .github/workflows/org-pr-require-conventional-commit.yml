@@ -10,3 +10,15 @@ jobs:
     uses: immich-app/devtools/.github/workflows/shared-pr-require-conventional-commit.yml@main
     permissions:
       pull-requests: write
+    with:
+      token: ${{ secrets.GITHUB_TOKEN }}
+      task_types: |
+        feat
+        fix
+        docs
+        test
+        ci
+        refactor
+        perf
+        chore
+        revert

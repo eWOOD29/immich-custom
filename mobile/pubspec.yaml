@@ -114,11 +114,8 @@ dev_dependencies:
   riverpod_lint: ^2.6.1
 
 dependency_overrides:
-  drift:
-    git:
-      url: https://github.com/immich-app/drift
-      ref: '53ef7e9f19fe8f68416251760b4b99fe43f1c575'
-      path: drift/
+  bonsoir: ^5.0.0
+  bonsoir_platform_interface: ^5.0.0
 
 flutter:
   uses-material-design: true

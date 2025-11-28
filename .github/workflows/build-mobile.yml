@@ -227,7 +227,9 @@ jobs:
       - name: Install CocoaPods dependencies
         working-directory: ./mobile/ios
         run: |
-          pod install
+          pod repo update --silent
+          pod update sqlite3 --silent
+          pod install --repo-update
 
       - name: Install Fastlane
         working-directory: ./mobile/ios

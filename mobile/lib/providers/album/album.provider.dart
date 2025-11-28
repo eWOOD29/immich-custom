@@ -93,9 +93,7 @@ class AlbumNotifier extends StateNotifier<List<Album>> {
     return albumService.setActivityStatus(album, enabled);
   }
 
-  Future<Album?> toggleSortOrder(Album album) {
-    final order = album.sortOrder == SortOrder.asc ? SortOrder.desc : SortOrder.asc;
-
+  Future<Album?> setSortOrder(Album album, SortOrder order) {
     return albumService.updateSortOrder(album, order);
   }
 

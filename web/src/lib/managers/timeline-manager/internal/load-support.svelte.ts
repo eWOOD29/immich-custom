@@ -15,11 +15,13 @@ export async function loadFromTimeBuckets(
     return;
   }
 
+  const { displayOrder: _displayOrder, shuffleToken: _shuffleToken, ...apiOptions } = options;
+
   const timeBucket = toISOYearMonthUTC(monthGroup.yearMonth);
   const bucketResponse = await getTimeBucket(
     {
       ...authManager.params,
-      ...options,
+      ...apiOptions,
       timeBucket,
     },
     { signal },

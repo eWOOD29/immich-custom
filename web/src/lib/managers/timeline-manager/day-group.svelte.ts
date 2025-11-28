@@ -6,7 +6,7 @@ import { plainDateTimeCompare } from '$lib/utils/timeline-util';
 
 import { SvelteSet } from 'svelte/reactivity';
 import type { MonthGroup } from './month-group.svelte';
-import type { AssetOperation, Direction, MoveAsset, TimelineAsset } from './types';
+import type { AssetOperation, Direction, MoveAsset, TimelineAsset, TimelineDisplayOrder } from './types';
 import { ViewerAsset } from './viewer-asset.svelte';
 
 export class DayGroup {
@@ -73,9 +73,20 @@ export class DayGroup {
     this.#deferredLayout = value;
   }
 
-  sortAssets(sortOrder: AssetOrder = AssetOrder.Desc) {
+  sortAssets(sortOrder: TimelineDisplayOrder = AssetOrder.Desc) {
+    if (sortOrder === 'shuffle') {
+      this.#shuffleAssets();
+      return;
+    }
     const sortFn = plainDateTimeCompare.bind(undefined, sortOrder === AssetOrder.Asc);
     this.viewerAssets.sort((a, b) => sortFn(a.asset.fileCreatedAt, b.asset.fileCreatedAt));
+  }
+
+  #shuffleAssets() {
+    for (let i = this.viewerAssets.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this.viewerAssets[i], this.viewerAssets[j]] = [this.viewerAssets[j], this.viewerAssets[i]];
+    }
   }
 
   getFirstAsset() {

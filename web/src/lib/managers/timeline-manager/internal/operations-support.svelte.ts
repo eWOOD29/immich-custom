@@ -5,14 +5,14 @@ import { SvelteSet } from 'svelte/reactivity';
 import { GroupInsertionCache } from '../group-insertion-cache.svelte';
 import { MonthGroup } from '../month-group.svelte';
 import type { TimelineManager } from '../timeline-manager.svelte';
-import type { AssetOperation, TimelineAsset } from '../types';
+import type { AssetOperation, TimelineAsset, TimelineDisplayOrder } from '../types';
 import { updateGeometry } from './layout-support.svelte';
 import { getMonthGroupByDate } from './search-support.svelte';
 
 export function addAssetsToMonthGroups(
   timelineManager: TimelineManager,
   assets: TimelineAsset[],
-  options: { order: AssetOrder },
+  options: { order: AssetOrder; displayOrder?: TimelineDisplayOrder },
 ) {
   if (assets.length === 0) {
     return;
@@ -43,7 +43,7 @@ export function addAssetsToMonthGroups(
   }
 
   for (const group of addContext.existingDayGroups) {
-    group.sortAssets(options.order);
+    group.sortAssets(options.displayOrder ?? options.order);
   }
 
   for (const monthGroup of addContext.bucketsWithNewDayGroups) {
@@ -61,7 +61,7 @@ export function runAssetOperation(
   timelineManager: TimelineManager,
   ids: Set<string>,
   operation: AssetOperation,
-  options: { order: AssetOrder },
+  options: { order: AssetOrder; displayOrder?: TimelineDisplayOrder },
 ) {
   if (ids.size === 0) {
     return { processedIds: new SvelteSet(), unprocessedIds: ids, changedGeometry: false };

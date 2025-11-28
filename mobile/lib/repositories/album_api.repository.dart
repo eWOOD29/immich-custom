@@ -64,7 +64,7 @@ class AlbumApiRepository extends ApiRepository {
     SortOrder? sortOrder,
   }) async {
     AssetOrder? order;
-    if (sortOrder != null) {
+    if (sortOrder != null && sortOrder != SortOrder.shuffle) {
       order = sortOrder == SortOrder.asc ? AssetOrder.asc : AssetOrder.desc;
     }
 

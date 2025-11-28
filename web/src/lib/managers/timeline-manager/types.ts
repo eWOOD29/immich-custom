@@ -1,13 +1,17 @@
 import type { TimelineDate, TimelineDateTime, TimelineYearMonth } from '$lib/utils/timeline-util';
-import type { AssetStackResponseDto, AssetVisibility } from '@immich/sdk';
+import type { AssetOrder, AssetStackResponseDto, AssetVisibility } from '@immich/sdk';
 
 export type ViewportTopMonth = TimelineYearMonth | undefined | 'lead-in' | 'lead-out';
 
 export type AssetApiGetTimeBucketsRequest = Parameters<typeof import('@immich/sdk').getTimeBuckets>[0];
 
+export type TimelineDisplayOrder = AssetOrder | 'shuffle';
+
 export type TimelineManagerOptions = Omit<AssetApiGetTimeBucketsRequest, 'size'> & {
   timelineAlbumId?: string;
   deferInit?: boolean;
+  displayOrder?: TimelineDisplayOrder;
+  shuffleToken?: string;
 };
 
 export type AssetDescriptor = { id: string };
